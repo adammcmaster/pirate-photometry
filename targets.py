@@ -1,0 +1,21 @@
+import re
+
+ALL_FILTERS = {'B', 'V', 'R', 'I'}
+
+ALL_TELESCOPE_FILTERS = {
+    'PIRATE': ALL_FILTERS,
+    'COAST': {f for f in ALL_FILTERS if f != 'I'},
+}
+
+TARGETS = {
+    'HD38451': ALL_FILTERS,
+    '27Cephei': ALL_FILTERS,
+    '1SWASPJ002552.75+454445.3': ALL_FILTERS,
+    '1SWASPJ002552.88+454558.7': ALL_FILTERS,
+    '1SWASPJ184559.85+471858.4': ALL_FILTERS,
+    '1SWASPJ002551.12+454523.8': ALL_FILTERS,
+}
+
+ESCAPED_TARGET_NAMES = {
+    re.sub(r'[.+-]', '_', name): name for name in TARGETS.keys()
+}
