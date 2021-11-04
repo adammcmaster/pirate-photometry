@@ -8,12 +8,20 @@ ALL_TELESCOPE_FILTERS = {
 }
 
 TARGETS = {
-    'HD38451': ALL_FILTERS,
-    '27Cephei': ALL_FILTERS,
-    '1SWASPJ002552.75+454445.3': ALL_FILTERS,
-    '1SWASPJ002552.88+454558.7': ALL_FILTERS,
-    '1SWASPJ184559.85+471858.4': ALL_FILTERS,
-    '1SWASPJ002551.12+454523.8': ALL_FILTERS,
+    'HD38451': {},
+    '27Cephei': {},
+    '1SWASPJ002552.75+454445.3': {
+        'expected_periods': (24671.86133,),
+    },
+    '1SWASPJ002552.88+454558.7': {
+        'expected_periods': (148009.10938,)
+    },
+    '1SWASPJ184559.85+471858.4': {
+        'expected_periods': (37009.83594,)
+    },
+    '1SWASPJ002551.12+454523.8': {
+        'expected_periods': (74014.22656,)
+    },
 }
 
 ESCAPED_TARGET_NAMES = {
