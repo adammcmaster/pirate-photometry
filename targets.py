@@ -1,10 +1,10 @@
 import re
 
-ALL_FILTERS = {'B', 'V', 'R', 'I'}
+ALL_FILTERS = {'U', 'B', 'V', 'R', 'I'}
 
 ALL_TELESCOPE_FILTERS = {
     'PIRATE': ALL_FILTERS,
-    'COAST': {f for f in ALL_FILTERS if f != 'I'},
+    'COAST': ALL_FILTERS - {'U', 'I'},
 }
 
 TARGETS = {
