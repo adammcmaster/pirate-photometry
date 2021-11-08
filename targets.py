@@ -1,3 +1,4 @@
+from datetime import date
 import re
 
 ALL_FILTERS = {'U', 'B', 'V', 'R', 'I'}
@@ -8,8 +9,12 @@ ALL_TELESCOPE_FILTERS = {
 }
 
 TARGETS = {
-    'HD38451': {},
-    '27Cephei': {},
+    'HD38451': {
+        'end': date(2022, 1, 1),
+    },
+    '27Cephei': {
+        'end': date(2021, 11, 9),
+    },
     '1SWASPJ002552.75+454445.3': {
         'expected_periods': (24671.86133,),
     },
