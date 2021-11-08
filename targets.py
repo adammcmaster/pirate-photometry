@@ -17,15 +17,19 @@ TARGETS = {
     },
     '1SWASPJ002552.75+454445.3': {
         'expected_periods': (24671.86133,),
+        'uses': '',
     },
     '1SWASPJ002552.88+454558.7': {
-        'expected_periods': (148009.10938,)
+        'expected_periods': (148009.10938,),
+        'uses': '',
     },
     '1SWASPJ184559.85+471858.4': {
-        'expected_periods': (37009.83594,)
+        'expected_periods': (37009.83594,),
+        'uses': '',
     },
     '1SWASPJ002551.12+454523.8': {
-        'expected_periods': (74014.22656,)
+        'expected_periods': (74014.22656,),
+        'uses': '',
     },
 }
 
