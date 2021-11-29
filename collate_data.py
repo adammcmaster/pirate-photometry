@@ -14,7 +14,7 @@ import matching
 from calibration import calibrate
 
 
-DATA_PATH = Path("/STEM/data/project/osl-telescope/")
+DATA_PATH = Path("/STEM/data/project/osl-telescope/data/users/Pipeline/")
 REPROCESS = False # Set to True to reprocess previous data rather than finding new data
 
 try: 
