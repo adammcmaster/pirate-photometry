@@ -8,8 +8,6 @@ dependencies:
   - astroquery=0.4.4=pyhd8ed1ab_0
   - beautifulsoup4=4.10.0=pyha770c72_0
   - brotlipy=0.7.0=py39h3811e60_1003
-  - ca-certificates=2021.10.8=ha878542_0
-  - certifi=2021.10.8=py39hf3d152e_1
   - cffi=1.14.6=py39he32792d_0
   - charset-normalizer=2.0.8=pyhd8ed1ab_0
   - cryptography=36.0.0=py39h95dcef6_0
@@ -22,7 +20,6 @@ dependencies:
   - libgcc-ng=11.2.0=h1d223b6_11
   - llvm-openmp=12.0.1=h4bd325d_1
   - mkl=2021.4.0=h8d4b97c_729
-  - openssl=1.1.1l=h7f98852_0
   - pycparser=2.21=pyhd8ed1ab_0
   - pyopenssl=21.0.0=pyhd8ed1ab_0
   - pysocks=1.7.1=py39hf3d152e_4
@@ -37,7 +34,10 @@ dependencies:
   - zipp=3.6.0=pyhd8ed1ab_0
   - astropy=4.3.1=py39h09021b7_0
   - blas=1.0=mkl
+  - bottleneck=1.3.2=py39hdd57654_1
   - brotli=1.0.9=he6710b0_2
+  - ca-certificates=2021.10.26=h06a4308_2
+  - certifi=2021.10.8=py39h06a4308_0
   - cycler=0.10.0=py39h06a4308_0
   - dbus=1.13.18=hb2f20db_0
   - expat=2.4.1=h2531618_2
@@ -72,9 +72,12 @@ dependencies:
   - mkl_random=1.2.2=py39h51133e4_0
   - munkres=1.1.4=py_0
   - ncurses=6.3=h7f8727e_2
+  - numexpr=2.7.3=py39h22e1b3c_1
   - numpy=1.21.2=py39h20f2e39_0
   - numpy-base=1.21.2=py39h79a1101_0
   - olefile=0.46=pyhd3eb1b0_0
+  - openssl=1.1.1l=h7f8727e_0
+  - pandas=1.3.4=py39h8c16a72_0
   - pcre=8.45=h295c915_0
   - pillow=8.4.0=py39h5aabda8_0
   - pip=21.2.4=py39h06a4308_0
@@ -83,6 +86,7 @@ dependencies:
   - pyqt=5.9.2=py39h2531618_6
   - python=3.9.7=h12debd9_1
   - python-dateutil=2.8.2=pyhd3eb1b0_0
+  - pytz=2021.3=pyhd3eb1b0_0
   - pyyaml=6.0=py39h7f8727e_1
   - qt=5.9.7=h5867ecd_1
   - readline=8.1=h27cfd23_0
