@@ -2,7 +2,7 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table, vstack
 from astropy.time import Time
 
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 
 from pathlib import Path
 
@@ -14,7 +14,7 @@ import matching
 from calibration import calibrate
 
 
-DATA_PATH = Path("//stem-linux-homes/OSL-Telescope/data/users/Pipeline/")
+DATA_PATH = Path("/STEM/data/project/osl-telescope/")
 REPROCESS = False # Set to True to reprocess previous data rather than finding new data
 
 try: 
@@ -56,12 +56,8 @@ for date in tqdm(new_dates, desc='New dates'):
             ).jd,
         }
 
-        try:
-            Path(f"data/obs_catalogues/").mkdir(parents=True, exist_ok=True)
-            table = Table.read(f'data/obs_catalogues/{obs_catalogue.stem}.ecsv')
-        except FileNotFoundError:
-            table = Table.read(obs_catalogue, format='ascii.sextractor')
-            table.write(f'data/obs_catalogues/{obs_catalogue.stem}.ecsv')
+        table = Table.read(obs_catalogue, format='ascii.sextractor')
+
         table.rename_column('ALPHA_J2000', 'RA')
         table.rename_column('DELTA_J2000', 'Dec')
 
