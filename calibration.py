@@ -7,6 +7,8 @@ import numpy
 
 from pathlib import Path
 
+import constants
+
 MAX_CALIBRATION_ROWS = 10
 MIN_CALIBRATION_ROWS = 5
 SPLIT_SIZE = 10
