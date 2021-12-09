@@ -7,7 +7,7 @@ import itertools
 import pickle
 
 from matching import match_targets
-from targets import ESCAPED_TARGET_NAMES
+from targets import ESCAPED_TARGET_NAMES, get_target_observations, read_source_catalogue
 
 import constants
 
@@ -83,9 +83,7 @@ def index_data(reprocess=False):
                 ).jd,
             }
 
-            table = Table.read(obs_catalogue, format="ascii.sextractor")
-            table.rename_column("ALPHA_J2000", "RA")
-            table.rename_column("DELTA_J2000", "Dec")
+            table = read_source_catalogue(obs_catalogue)
             match_targets(table)
 
             table.rename_column("RA", "_RAJ2000")
@@ -100,22 +98,19 @@ def index_data(reprocess=False):
 
                 out_table["observation catalogue"] = str(obs_catalogue)
 
-                if target_row["matched target"] not in obs_tables:
-                    target_obs = (
-                        constants.TARGET_OBSERVATIONS_PATH
-                        / f"{target_row['matched target']}.ecsv"
+                if target_row["matched target"] in obs_tables:
+                    obs_tables[target_row["matched target"]] = vstack(
+                        [obs_tables[target_row["matched target"]], out_table]
                     )
-                    if reprocess or not target_obs.exists():
+                else:
+                    if reprocess:
                         obs_tables[target_row["matched target"]] = out_table
-                        continue
                     else:
-                        obs_tables[target_row["matched target"]] = Table.read(
-                            constants.TARGET_OBSERVATIONS_PATH
-                            / f"{target_row['matched target']}.ecsv"
+                        obs_tables[
+                            target_row["matched target"]
+                        ] = get_target_observations(
+                            target_row["matched target"], default=out_table
                         )
-                obs_tables[target_row["matched target"]] = vstack(
-                    [obs_tables[target_row["matched target"]], out_table]
-                )
 
         if not reprocess:
             processed_dates[date] = date_has_data

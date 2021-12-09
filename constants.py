@@ -6,3 +6,6 @@ DATA_PATH.mkdir(parents=True, exist_ok=True)
 
 TARGET_OBSERVATIONS_PATH = DATA_PATH / "target_observations"
 TARGET_OBSERVATIONS_PATH.mkdir(exist_ok=True)
+
+REFERENCE_STARS_PATH = DATA_PATH / "reference_stars"
+REFERENCE_STARS_PATH.mkdir(exist_ok=True)

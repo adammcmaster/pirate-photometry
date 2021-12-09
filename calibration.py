@@ -1,13 +1,18 @@
 from astropy.coordinates import match_coordinates_sky
-from astropy.table import Table, unique
+from astropy.coordinates.sky_coordinate import SkyCoord
+from astropy.table import Table, unique, vstack
 from astropy import units as u
 from astroquery.vizier import Vizier
 
 import numpy
 
+from tqdm import tqdm
+
 from pathlib import Path
 
 import constants
+from matching import target_coords
+from targets import get_target_observations, read_source_catalogue, TARGETS
 
 MAX_CALIBRATION_ROWS = 10
 MIN_CALIBRATION_ROWS = 5
@@ -20,6 +25,11 @@ CALIBRATION_CATALOGUES = {
 }
 
 
+def calibrate_data():
+    for target in tqdm(TARGETS.keys(), desc="Calibrating observations"):
+        get_refstars_for_target(target)
+
+
 def get_refstars_for_target(target):
     """
     Generate a catalogue of reference stars for a given target.
@@ -27,21 +37,109 @@ def get_refstars_for_target(target):
     - target: The target name.
 
     Returns: An astropy table of ref star coordinates and magnitudes.
-
-    Reference stars are selected according to the following algorithm:
-
-    - Select up to 10 unflagged observations of the target in each band at random.
-    - Cut original observation catalogues on angular separation and absolute flux
-      difference.
-    - Concatenate the original observation catalogues into one table.
-    - Successively query_region() the combined observation catalogues against each
-      calibration catalogue to produce a set of co-observed stars which appear in
-      every calibration catalogue (and so every band).
-    - To do: How to handle bands where we have multiple catalogues? It would be good enough for ref stars to appear in just one cat for each band.
-    - Remove known variable stars.
-    - Select the top 10 remaining stars which appear in the most observations.
     """
-    return
+
+    # Select up to 10 unflagged observations of the target in each band at random.
+    band_catalogues = get_random_catalogues_for_bands(target)
+
+    for band, (catalogues, target_rows) in band_catalogues.items():
+        # Cut original observation catalogues on angular separation and absolute flux difference.
+        catalogues = cut_catalogues_flux(vstack(target_rows)["FLUX_AUTO"], catalogues)
+        catalogues = cut_catalogues_separation(
+            target_coords[target_coords["target_name"] == target]["coords"], catalogues,
+        )
+
+        # Concatenate the original observation catalogues into one table.
+        candidate_stars = vstack(catalogues)
+
+        # Successively query_region() the combined observation catalogues against each
+        #  calibration catalogue to produce a set of co-observed stars which appear in
+        #  every calibration catalogue (and so every band).
+        # To do: How to handle bands where we have multiple catalogues? It would be good enough for ref stars to appear in just one cat for each band.
+        # Remove known variable stars.
+        # Select the top 10 remaining stars which appear in the most observations.
+
+        candidate_stars.write(
+            constants.REFERENCE_STARS_PATH / f"{target}_{band}.ecsv", overwrite=True
+        )
+
+
+def get_random_catalogues_for_bands(target, catalogues_per_band=10):
+    """
+    Read source catalogues for a random set of unflagged observations of the target.
+
+    - target: The target name.
+
+    Returns: A dict of lists of tuples per band with full catalogue tables and individual target observations:
+             {'R': ([Table(), Table(), ...], [Row(), Row(), ...]), ...}
+    """
+    target_obs = get_target_observations(target)
+    if target_obs is None:
+        return
+    target_obs = target_obs[
+        target_obs["FLAGS"] == 0
+    ]  # To do: Should this only care about saturation?
+
+    out = {}
+    for band_obs in target_obs.group_by("band").groups:
+        num_band_obs = len(band_obs)
+        if num_band_obs < catalogues_per_band:
+            continue
+        # Select a random subset of observations
+        selected_obs = [
+            row
+            for row in band_obs[
+                numpy.random.choice(num_band_obs, catalogues_per_band, replace=False)
+            ]
+        ]
+        # Load the full source tables for each selected observation
+        selected_tables = [
+            read_source_catalogue(row["observation catalogue"]) for row in selected_obs
+        ]
+        # Remove the target's observation from the full source table
+        selected_tables = [
+            table[table["NUMBER"] != obs_row["NUMBER"]]
+            for table, obs_row in zip(selected_tables, selected_obs)
+        ]
+        out[selected_obs[0]["band"]] = (selected_tables, selected_obs)
+
+    return out
+
+
+def cut_catalogues_flux(fluxes, catalogues, keep=50):
+    """
+    Selects sources by smallest flux difference in a list of Tables.
+
+    - fluxes: A list of absolute flux differences
+    - catalogues: [Table(), Table(), ...]
+    - keep: the number of sources to keep in each table
+
+    Returns: a list of filtered Tables
+    """
+    out_tables = []
+    for flux, table in zip(fluxes, catalogues):
+        table["flux diff"] = numpy.abs(flux - table["FLUX_AUTO"])
+        table.sort("flux diff")
+        out_tables.append(table[:keep])
+    return out_tables
+
+
+def cut_catalogues_separation(coords, catalogues, keep=25):
+    """
+    Selects sources by closest angular separation in a dict of lists of Tables.
+
+    - coords: The coordinates of the target
+    - catalogues: [Table(), Table(), ...]
+    - keep: the number of sources to keep in each table
+
+    Returns: a list of filtered Tables.
+    """
+    out_tables = []
+    for table in catalogues:
+        table["separation"] = SkyCoord.guess_from_table(table).separation(coords)
+        table.sort("separation")
+        out_tables.append(table[:keep])
+    return out_tables
 
 
 def get_refstar_table(

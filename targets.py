@@ -1,5 +1,9 @@
+from astropy.table import Table
+
 from datetime import date
 import re
+
+import constants
 
 ALL_FILTERS = {"U", "B", "V", "R", "I"}
 
@@ -18,3 +22,17 @@ TARGETS = {
 }
 
 ESCAPED_TARGET_NAMES = {re.sub(r"[.+-]", "_", name): name for name in TARGETS.keys()}
+
+
+def get_target_observations(target, default=None):
+    obs_path = constants.TARGET_OBSERVATIONS_PATH / f"{target}.ecsv"
+    if obs_path.exists():
+        return Table.read(constants.TARGET_OBSERVATIONS_PATH / f"{target}.ecsv")
+    else:
+        return default
+
+def read_source_catalogue(path):
+    table = Table.read(path, format="ascii.sextractor")
+    table.rename_column("ALPHA_J2000", "RA")
+    table.rename_column("DELTA_J2000", "Dec")
+    return table
