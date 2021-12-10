@@ -18,11 +18,17 @@ MAX_CALIBRATION_ROWS = 10
 MIN_CALIBRATION_ROWS = 5
 SPLIT_SIZE = 10
 CALIBRATION_CATALOGUES = {
-    "I/284/out": {"B": "B1mag", "R": "R1mag", "I": "Imag",},
-    "I/297/out": {"B": "Bmag", "V": "Vmag", "R": "Rmag",},
-    "VI/135/table15": {"B": "BTmag", "V": "VTmag",},
-    "II/339/uvotssc1": {"U": "Umag", "B": "Bmag", "V": "Vmag",},
+    "I/284/out": {"B": "B1mag", "R": "R1mag", "I": "Imag"},
+    "I/297/out": {"B": "Bmag", "V": "Vmag", "R": "Rmag"},
+    "VI/135/table15": {"B": "BTmag", "V": "VTmag"},
+    "II/339/uvotssc1": {"U": "Umag", "B": "Bmag", "V": "Vmag"},
 }
+CALIBRATION_CATALOGUES_PER_BAND = {}
+for cat, bands in CALIBRATION_CATALOGUES.items():
+    for band in bands:
+        CALIBRATION_CATALOGUES_PER_BAND.setdefault(band, set()).add(cat)
+
+CATALOGUE_MATCHING_RADIUS = 1e-4 * u.deg
 
 
 def calibrate_data():
@@ -38,30 +44,43 @@ def get_refstars_for_target(target):
 
     Returns: An astropy table of ref star coordinates and magnitudes.
     """
+    refstars_path = constants.REFERENCE_STARS_PATH / f"{target}.ecsv"
+    if refstars_path.exists():
+        return Table.read(refstars_path)
+
+    out_refstars = []
 
     # Select up to 10 unflagged observations of the target in each band at random.
     band_catalogues = get_random_catalogues_for_bands(target)
 
     for band, (catalogues, target_rows) in band_catalogues.items():
         # Cut original observation catalogues on angular separation and absolute flux difference.
-        catalogues = cut_catalogues_flux(vstack(target_rows)["FLUX_AUTO"], catalogues)
-        catalogues = cut_catalogues_separation(
-            target_coords[target_coords["target_name"] == target]["coords"], catalogues,
+        ref_stars = cut_catalogues_flux(vstack(target_rows)["FLUX_AUTO"], catalogues)
+        ref_stars = cut_catalogues_separation(
+            target_coords[target_coords["target_name"] == target]["coords"], ref_stars
         )
 
         # Concatenate the original observation catalogues into one table.
-        candidate_stars = vstack(catalogues)
+        ref_stars = vstack(ref_stars)
 
-        # Successively query_region() the combined observation catalogues against each
-        #  calibration catalogue to produce a set of co-observed stars which appear in
-        #  every calibration catalogue (and so every band).
-        # To do: How to handle bands where we have multiple catalogues? It would be good enough for ref stars to appear in just one cat for each band.
-        # Remove known variable stars.
-        # Select the top 10 remaining stars which appear in the most observations.
+        # Cross-reference the candidates against each catalogue, keeping whichever has
+        # the most matches
+        ref_stars = get_most_catalogue_matches(ref_stars, band)
+        if ref_stars is None:
+            continue
 
-        candidate_stars.write(
-            constants.REFERENCE_STARS_PATH / f"{target}_{band}.ecsv", overwrite=True
-        )
+        # Remove known variable stars
+        ref_stars = remove_known_variables(ref_stars)
+
+        # To do: Remove stars which show variability in our observations
+
+        ref_stars["band"] = band
+        out_refstars.append(ref_stars)
+
+    if len(out_refstars) > 0:
+        out_refstars = vstack(out_refstars)
+        out_refstars.write(refstars_path, overwrite=True)
+        return out_refstars
 
 
 def get_random_catalogues_for_bands(target, catalogues_per_band=10):
@@ -70,7 +89,8 @@ def get_random_catalogues_for_bands(target, catalogues_per_band=10):
 
     - target: The target name.
 
-    Returns: A dict of lists of tuples per band with full catalogue tables and individual target observations:
+    Returns: A dict of lists of tuples per band with full catalogue tables and 
+             individual target observations:
              {'R': ([Table(), Table(), ...], [Row(), Row(), ...]), ...}
     """
     target_obs = get_target_observations(target)
@@ -140,6 +160,58 @@ def cut_catalogues_separation(coords, catalogues, keep=25):
         table.sort("separation")
         out_tables.append(table[:keep])
     return out_tables
+
+
+def get_most_catalogue_matches(stars, band):
+    most_matches = 0
+    best_matches = None
+    for catalogue in CALIBRATION_CATALOGUES_PER_BAND[band]:
+        catalogue_results = Vizier.query_region(
+            stars, radius=CATALOGUE_MATCHING_RADIUS, catalog=catalogue
+        )
+        if len(catalogue_results) == 0:
+            continue
+        else:
+            catalogue_results = catalogue_results[0]
+
+        # Remove results with no magnitude
+        catalogue_results = catalogue_results[
+            ~numpy.isnan(catalogue_results[CALIBRATION_CATALOGUES[catalogue][band]])
+        ]
+
+        results_len = len(catalogue_results)
+        if results_len > most_matches:
+            most_matches = results_len
+            best_matches = catalogue_results
+
+    if best_matches is None:
+        return
+
+    unique_matches = {
+        "_RAJ2000": [],
+        "_DEJ2000": [],
+        "magnitude": [],
+        "num_matches": [],
+    }
+    for grouped_matches in best_matches.group_by(["RAJ2000", "DEJ2000"]).groups:
+        unique_matches["num_matches"].append(len(grouped_matches))
+        unique_matches["_RAJ2000"].append(grouped_matches[0]["RAJ2000"])
+        unique_matches["_DEJ2000"].append(grouped_matches[0]["DEJ2000"])
+        unique_matches["magnitude"].append(
+            grouped_matches[0][CALIBRATION_CATALOGUES[best_matches.meta["name"]][band]]
+        )
+
+    return Table(unique_matches, units={"_RAJ2000": u.deg, "_DEJ2000": u.deg})
+
+
+def remove_known_variables(stars):
+    vsx_matches = Vizier.query_region(
+        stars, radius=CATALOGUE_MATCHING_RADIUS, catalog="B/vsx/vsx"
+    )
+    if len(vsx_matches) == 0:
+        return stars
+    stars.remove_rows(vsx_matches[0]["_q"] - 1)
+    return stars
 
 
 def get_refstar_table(

@@ -31,8 +31,11 @@ def get_target_observations(target, default=None):
     else:
         return default
 
+
 def read_source_catalogue(path):
     table = Table.read(path, format="ascii.sextractor")
     table.rename_column("ALPHA_J2000", "RA")
     table.rename_column("DELTA_J2000", "Dec")
+    table["_RAJ2000"] = table["RA"]
+    table["_DEJ2000"] = table["Dec"]
     return table
