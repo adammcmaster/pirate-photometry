@@ -5,7 +5,7 @@ from astropy import units as u
 import csv
 import datetime
 
-from targets import TARGETS, ALL_TELESCOPE_FILTERS, ALL_FILTERS
+from targets import TARGETS, ALL_TELESCOPE_FILTERS, ALL_FILTERS, get_target_observations
 
 import constants
 
@@ -56,9 +56,7 @@ def generate_schedules():
                 filters = _filters
 
                 try:
-                    photometry = Table.read(
-                        constants.TARGET_OBSERVATIONS_PATH / f"{target}.ecsv"
-                    )
+                    photometry = get_target_observations(target)
                     photometry = photometry[photometry["telescope"] == telescope]
                     photometry["flagged"] = (
                         photometry["FLAGS"] & 4

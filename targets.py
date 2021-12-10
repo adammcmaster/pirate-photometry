@@ -1,3 +1,4 @@
+from astropy.coordinates.sky_coordinate import SkyCoord
 from astropy.table import Table
 
 from datetime import date
@@ -24,12 +25,20 @@ TARGETS = {
 ESCAPED_TARGET_NAMES = {re.sub(r"[.+-]", "_", name): name for name in TARGETS.keys()}
 
 
+def target_observations_path(target):
+    return constants.TARGET_OBSERVATIONS_PATH / f"{target}.ecsv"
+
+
 def get_target_observations(target, default=None):
-    obs_path = constants.TARGET_OBSERVATIONS_PATH / f"{target}.ecsv"
+    obs_path = target_observations_path(target)
     if obs_path.exists():
         return Table.read(constants.TARGET_OBSERVATIONS_PATH / f"{target}.ecsv")
     else:
         return default
+
+
+def write_target_observations(target, obs):
+    obs.write(target_observations_path(target), overwrite=True)
 
 
 def read_source_catalogue(path):
@@ -38,4 +47,5 @@ def read_source_catalogue(path):
     table.rename_column("DELTA_J2000", "Dec")
     table["_RAJ2000"] = table["RA"]
     table["_DEJ2000"] = table["Dec"]
+    table["coords"] = SkyCoord.guess_from_table(table)
     return table

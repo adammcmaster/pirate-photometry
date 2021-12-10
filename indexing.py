@@ -7,7 +7,12 @@ import itertools
 import pickle
 
 from matching import match_targets
-from targets import ESCAPED_TARGET_NAMES, get_target_observations, read_source_catalogue
+from targets import (
+    ESCAPED_TARGET_NAMES,
+    get_target_observations,
+    write_target_observations,
+    read_source_catalogue,
+)
 
 import constants
 
@@ -85,9 +90,6 @@ def index_data(reprocess=False):
 
             table = read_source_catalogue(obs_catalogue)
             match_targets(table)
-
-            table.rename_column("RA", "_RAJ2000")
-            table.rename_column("Dec", "_DEJ2000")
             matched_targets = table[~table["matched target"].mask]
 
             for target_row in matched_targets:
@@ -120,4 +122,4 @@ def index_data(reprocess=False):
             pickle.dump(processed_dates, processed_dates_file)
 
     for name, table in obs_tables.items():
-        table.write(constants.TARGET_OBSERVATIONS_PATH / f"{name}.ecsv", overwrite=True)
+        write_target_observations(name, table)
