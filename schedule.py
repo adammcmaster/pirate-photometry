@@ -62,6 +62,8 @@ def generate_schedules():
                         photometry["FLAGS"] & 4
                     ) != 0  # In this case we only care about saturation
                     for band, group in photometry.to_pandas().groupby("band"):
+                        if band not in filters:
+                            continue
                         pt = group[["exposure", "flagged"]].pivot_table(
                             columns="flagged",
                             index=["exposure"],
