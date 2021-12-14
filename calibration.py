@@ -92,6 +92,8 @@ def get_refstars_for_target(target):
 
     # Select up to 10 unflagged observations of the target in each band at random.
     band_catalogues = get_random_catalogues_for_bands(target)
+    if band_catalogues is None:
+        return
 
     for band, (catalogues, target_rows) in band_catalogues.items():
         # Cut original observation catalogues on angular separation and absolute flux difference.

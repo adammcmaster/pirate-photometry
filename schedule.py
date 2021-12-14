@@ -55,8 +55,8 @@ def generate_schedules():
                         _filters[f].append(float(e))
                 filters = _filters
 
-                try:
-                    photometry = get_target_observations(target)
+                photometry = get_target_observations(target)
+                if photometry is not None:
                     photometry = photometry[photometry["telescope"] == telescope]
                     photometry["flagged"] = (
                         photometry["FLAGS"] & 4
@@ -96,8 +96,6 @@ def generate_schedules():
                             filters[band] = [
                                 e for e in filters[band] if e >= max_successful_exposure
                             ]
-                except FileNotFoundError:
-                    pass
 
                 coords = SkyCoord.from_name(target, parse=True)
                 atoms = []
