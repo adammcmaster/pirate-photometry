@@ -6,11 +6,11 @@ import re
 
 import constants
 
-ALL_FILTERS = {"U", "B", "V", "R", "I"}
+ALL_FILTERS = {"B", "V", "R", "I"}
 
 ALL_TELESCOPE_FILTERS = {
     "PIRATE": ALL_FILTERS,
-    "COAST": ALL_FILTERS - {"U", "I"},
+    "COAST": ALL_FILTERS - {"I"},
 }
 
 TARGETS = {
