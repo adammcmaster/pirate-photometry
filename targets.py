@@ -53,7 +53,7 @@ def target_observations_path(target):
 def get_target_observations(target, default=None):
     obs_path = target_observations_path(target)
     if obs_path.exists():
-        return Table.read(constants.TARGET_OBSERVATIONS_PATH / f"{target}.ecsv")
+        return Table.read(obs_path)
     else:
         return default
 
