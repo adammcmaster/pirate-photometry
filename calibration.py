@@ -8,8 +8,6 @@ import numpy
 
 from tqdm import tqdm
 
-from pathlib import Path
-
 import constants
 from matching import target_coords
 from targets import (
