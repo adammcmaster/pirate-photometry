@@ -14,7 +14,7 @@ ALL_TELESCOPE_FILTERS = {
 }
 
 TARGETS = {
-    "HD38451": {"end": date(2023, 4, 1)},
+    "HD38451": {"end": date(2023, 4, 1), "uses": 10},
     "27Cephei": {"end": date(2021, 11, 9)},
     "1SWASPJ002552.75+454445.3": {
         "expected_periods": (24671.86133,),
