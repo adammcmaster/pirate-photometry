@@ -54,7 +54,11 @@ def calibrate_data():
             try:
                 mag = row["calibrated magnitude"]
                 err = row["calibrated magnitude err"]
-                if mag is not None and err is not None:
+                if (
+                    mag is not None and err is not None
+                    and not numpy.ma.is_masked(mag) 
+                    and not numpy.ma.is_masked(err)
+                ):
                     mags.append(mag)
                     errors.append(err)
                     continue
